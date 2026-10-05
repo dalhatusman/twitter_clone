@@ -12,6 +12,7 @@ interface IUser {
 
 interface AuthContextType {
   user: IUser | null;
+  setUser: React.Dispatch<React.SetStateAction<IUser | null>>;
   isLoading: boolean;
   login: (usernameOrEmail: string, password: string) => Promise<void>;
   register: (
@@ -98,7 +99,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+    <AuthContext.Provider
+      value={{ user, setUser, isLoading, login, register, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

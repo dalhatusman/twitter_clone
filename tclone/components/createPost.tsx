@@ -24,17 +24,18 @@ export default function CreatePostCard({ onPostCreated }: ICreatePostCard) {
 
   async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     e.preventDefault();
+    setError(null);
     const file = e.target.files?.[0];
+
+    if (!file?.type.startsWith("image/")) {
+      setError("Only image files are allowed");
+      return;
+    }
 
     if (file) {
       setImage(file);
     } else {
       setError("Please select an image");
-      return;
-    }
-
-    if (!file.type.startsWith("image/")) {
-      setError("Only image files are allowed");
       return;
     }
   }
@@ -55,7 +56,6 @@ export default function CreatePostCard({ onPostCreated }: ICreatePostCard) {
       const res = await api.post("/posts/", formData);
       onPostCreated(res.data);
       setText("");
-      console.log(res);
     } catch (err: any) {
       console.error("Failed to create post:", err);
       setError(
