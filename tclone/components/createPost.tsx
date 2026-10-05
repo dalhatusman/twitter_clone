@@ -28,6 +28,14 @@ export default function CreatePostCard({ onPostCreated }: ICreatePostCard) {
 
     if (file) {
       setImage(file);
+    } else {
+      setError("Please select an image");
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setError("Only image files are allowed");
+      return;
     }
   }
 
