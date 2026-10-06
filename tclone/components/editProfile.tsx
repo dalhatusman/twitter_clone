@@ -50,10 +50,16 @@ export function EditProfile({ profile }: ProfileCard) {
     setError("");
 
     const file = e.target.files?.[0];
+    // console.log(file?.size);
     if (!file?.type.startsWith("image/")) {
       setError("Only images are allowed");
       setHasInvalidFile(true);
       e.target.value = "";
+      return;
+    }
+    if (file.size > 500000) {
+      setError("File size must be 500 KB or lower");
+      setHasInvalidFile(true);
       return;
     }
     if (!file) {
@@ -96,7 +102,7 @@ export function EditProfile({ profile }: ProfileCard) {
           },
         },
       );
-      setUser((prev) => (prev ? { ...prev, ...data } : data));
+      setUser((prev) => (prev ? { ...prev, ...data } : prev));
       setSuccess(true);
     } catch (err: any) {
       console.error("Failed to save changes", err);
