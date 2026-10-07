@@ -24,46 +24,67 @@ interface ProfileCard {
 }
 
 export function EditProfile({ profile }: ProfileCard) {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const [profileData, setProfileData] = useState<IProfile | null>(profile);
-  if (!profileData) return null;
-  const [username, setUsername] = useState(profileData.username ?? "");
-  const [bio, setBio] = useState(profileData.bio ?? "");
-  const [fullName, setFullName] = useState(profileData.full_name ?? "");
+  const [username, setUsername] = useState(profileData?.username ?? "");
+  const [bio, setBio] = useState(profileData?.bio ?? "");
+  const [fullName, setFullName] = useState(profileData?.full_name ?? "");
   const [profilePicturePreview, setProfilePicturePreview] = useState<
     string | null
-  >(profileData.profile_picture ?? null);
+  >(profileData?.profile_picture ?? null);
   const [profilePictureFile, setProfilePictureFile] = useState<File | null>(
     null,
   );
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState("");
-
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [hasInvalidFile, setHasInvalidFile] = useState(false);
   useEffect(() => {
     setProfileData(profile);
   }, [profile]);
 
+  if (!profileData) return null;
+
   async function handleProfileChange(e: React.ChangeEvent<HTMLInputElement>) {
     e.preventDefault();
     setError("");
-    setLoading(true);
-    try {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      setProfilePictureFile(file);
-      setProfilePicturePreview(URL.createObjectURL(file));
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+
+    const file = e.target.files?.[0];
+    // console.log(file?.size);
+    if (!file?.type.startsWith("image/")) {
+      setError("Only images are allowed");
+      setHasInvalidFile(true);
+      e.target.value = "";
+      return;
     }
+    if (file.size > 500000) {
+      setError("File size must be 500 KB or lower");
+      setHasInvalidFile(true);
+      return;
+    }
+    if (!file) {
+      setError("Please select an image ");
+      return;
+    }
+    setHasInvalidFile(false);
+    setProfilePictureFile(file);
+    setProfilePicturePreview(URL.createObjectURL(file));
   }
 
   async function handleSave(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    setError("");
+    if (hasInvalidFile) {
+      setError(
+        "Please choose a valid image, or clear the selection, before saving",
+      );
+      return;
+    }
+
+    setError(null);
     setLoading(true);
+    setSuccess(false);
+
     try {
       const formData = new FormData();
       if (profilePictureFile) {
@@ -72,13 +93,18 @@ export function EditProfile({ profile }: ProfileCard) {
       formData.append("username", username);
       formData.append("bio", bio);
       formData.append("full_name", fullName);
-      await api.patch(`/profiles/${user?.username}/`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
+      const { data } = await api.patch(
+        `/profiles/${user?.username}/`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         },
-      });
-      window.location.reload();
-    } catch (err) {
+      );
+      setUser((prev) => (prev ? { ...prev, ...data } : prev));
+      setSuccess(true);
+    } catch (err: any) {
       console.error("Failed to save changes", err);
       setError("Failed to save changes");
     } finally {
@@ -97,19 +123,24 @@ export function EditProfile({ profile }: ProfileCard) {
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSave}>
-          <div className="flex items-center justify-center">
+          <div className="flex flex-col items-center justify-center gap-2">
+            {error && <p className="px-2 text-sm text-red-500">{error}</p>}
+            {success && (
+              <p className="px-2 text-sm text-green-600">Profile updated</p>
+            )}
             {profilePicturePreview ? (
               <Image
                 src={profilePicturePreview}
                 alt="Profile"
                 width={80}
-                height={50}
-                className="rounded-full object-cover"
+                height={80}
+                className="rounded-full object-cover h-20 w-20"
               />
             ) : (
               <div className="h-20 w-20 rounded-full bg-gray-200" />
             )}
           </div>
+
           <div className="flex items-center justify-center m-3">
             <input
               id="profile-picture"
@@ -118,25 +149,17 @@ export function EditProfile({ profile }: ProfileCard) {
               className="hidden"
               onChange={handleProfileChange}
             />
-
             <label
               htmlFor="profile-picture"
               className="cursor-pointer rounded-md bg-gray-200 mr-5 px-1 py-2 text-xs hover:bg-gray-300"
             >
               Choose Image
             </label>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded-md bg-blue-500 px-2 py-2 text-xs text-white hover:bg-blue-600 disabled:opacity-50"
-            >
-              {loading ? "Uploading..." : "Upload"}
-            </button>
           </div>
+
           <FieldGroup>
             <Field>
-              <Label htmlFor="name-1">Username</Label>
+              <Label htmlFor="username">Username</Label>
               <Input
                 id="username"
                 value={username}
@@ -144,7 +167,7 @@ export function EditProfile({ profile }: ProfileCard) {
               />
             </Field>
             <Field>
-              <Label htmlFor="full_name">Full Name</Label>
+              <Label htmlFor="fullname">Full Name</Label>
               <Input
                 id="fullname"
                 value={fullName}
@@ -160,9 +183,12 @@ export function EditProfile({ profile }: ProfileCard) {
               />
             </Field>
           </FieldGroup>
+
           <DialogFooter>
             <DialogClose render={<Button variant="outline">Cancel</Button>} />
-            <Button type="submit">Save changes</Button>
+            <Button type="submit" disabled={loading || hasInvalidFile}>
+              {loading ? "Saving..." : "Save changes"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
