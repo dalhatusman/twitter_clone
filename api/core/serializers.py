@@ -47,6 +47,12 @@ class ProfileSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return obj.likes.filter(id=request.user.id).exists()
         return False
+    
+    def get_is_bookmarked(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.bookmarks.filter(id=request.user.id).exists()
+        return False
         
 
 class MiniProfileSerializer(serializers.ModelSerializer):

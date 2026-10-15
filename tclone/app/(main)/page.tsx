@@ -40,6 +40,7 @@ export default function Home() {
       try {
         const { data } = await api.get<IPost[]>("/posts/");
         setPosts(data);
+        console.log(data);
       } catch (err: any) {
         setError(err);
       } finally {
@@ -64,6 +65,17 @@ export default function Home() {
       console.error("Failed to like post:", err);
     }
   }
+
+  // async function handleDelete(postId: number) {
+  //   try {
+  //     await api.delete(`/posts/${postId}/`);
+  //     setPosts((posts) => posts.filter((post) => post.id !== postId));
+  //   } catch (error) {
+  //     console.error("Failed to delete post:", error);
+  //   }
+  // }
+  const handleDeletePost = (postId: number) =>
+    setPosts((posts) => posts.filter((post) => post.id != postId));
 
   async function handleBookmark(postId: number) {
     try {
@@ -102,6 +114,7 @@ export default function Home() {
                 post={post}
                 onLike={handleLike}
                 onBookmark={handleBookmark}
+                onDeleted={handleDeletePost}
               />
             ))}
           </div>

@@ -1,5 +1,12 @@
 import Image from "next/image";
-import { MessageCircle, Heart, Repeat2, Share, Bookmark } from "lucide-react";
+import {
+  MessageCircle,
+  Heart,
+  Repeat2,
+  Share,
+  Bookmark,
+  Trash,
+} from "lucide-react";
 import {
   Card,
   CardContent,
@@ -11,14 +18,18 @@ import {
 import { IPost } from "@/types/post";
 import Link from "next/link";
 import { formatDateTime } from "@/lib/format-date";
+import { useAuth } from "@/context/AuthContext";
+import HandleDeleteBtn from "./handleDelete";
 
 interface ITCard {
   post: IPost;
   onLike: (postId: number) => void;
   onBookmark: (postId: number) => void;
+  onDeleted: (postId: number) => void;
 }
 
-export default function TCard({ post, onLike, onBookmark }: ITCard) {
+export default function TCard({ post, onLike, onBookmark, onDeleted }: ITCard) {
+  const { user } = useAuth();
   return (
     <Card key={post.id} className="w-full max-w-xl">
       <CardHeader className="flex flex-row items-center gap-3 px-4 py-2">
@@ -120,6 +131,12 @@ export default function TCard({ post, onLike, onBookmark }: ITCard) {
           />
           <span className="text-xs">{post.bookmarks_count}</span>
         </button>
+
+        {user?.username === post.profile.username ? (
+          <HandleDeleteBtn postId={post.id} onDeleted={onDeleted} />
+        ) : (
+          ""
+        )}
       </CardFooter>
     </Card>
   );

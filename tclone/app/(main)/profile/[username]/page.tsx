@@ -12,6 +12,7 @@ import Navbar from "@/components/navbar";
 import LoadingLogo from "@/components/loadingLogo";
 import { EditProfile } from "@/components/editProfile";
 import { IProfile } from "@/types/profile";
+import handleDeleteBtn from "@/components/handleDelete";
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -63,24 +64,28 @@ export default function ProfilePage() {
       console.error("Failed to like post:", err);
     }
   }
+
   async function handleBookmark(postId: number) {
     try {
       const res = await api.post(`/posts/${postId}/bookmark/`);
-      setPosts((prev) =>
-        prev.map((post) =>
-          post.id === postId
-            ? {
-                ...post,
-                is_bookmarked: res.data.bookmarked,
-                bookmarks_count: res.data.bookmarks_count,
-              }
-            : post,
-        ),
-      );
+      const updatedBookmark = (post: IPost) =>
+        post.id === postId
+          ? {
+              ...post,
+              is_bookmarked: res.data.bookmarked,
+              bookmarks_count: res.data.bookmarks_count,
+            }
+          : post;
+
+      setPosts((prev) => prev.map(updatedBookmark));
+      setLikedRes((prev) => prev.map(updatedBookmark));
     } catch (err) {
       console.error("Failed to bookmark post:", err);
     }
   }
+
+  const handlePostDelete = (postId: number) =>
+    setPosts((posts) => posts.filter((post) => post.id !== postId));
 
   if (loading) return <LoadingLogo fullScreen />;
   if (error || !profile)
@@ -153,6 +158,7 @@ export default function ProfilePage() {
                   post={post}
                   onLike={handleLike}
                   onBookmark={handleBookmark}
+                  onDeleted={handlePostDelete}
                 />
               ))
             )}
@@ -167,6 +173,7 @@ export default function ProfilePage() {
                   post={post}
                   onLike={handleLike}
                   onBookmark={handleBookmark}
+                  onDeleted={handlePostDelete}
                 />
               ))}
             </div>

@@ -31,7 +31,10 @@ export default function CreatePostCard({ onPostCreated }: ICreatePostCard) {
       setError("Only image files are allowed");
       return;
     }
-
+    if (file.size > 500000) {
+      setError("File size must be 500 KB or lower");
+      return;
+    }
     if (file) {
       setImage(file);
     } else {

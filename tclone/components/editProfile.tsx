@@ -50,7 +50,7 @@ export function EditProfile({ profile }: ProfileCard) {
     setError("");
 
     const file = e.target.files?.[0];
-    // console.log(file?.size);
+
     if (!file?.type.startsWith("image/")) {
       setError("Only images are allowed");
       setHasInvalidFile(true);

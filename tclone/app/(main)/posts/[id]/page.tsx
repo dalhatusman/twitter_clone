@@ -146,6 +146,9 @@ export default function PostDetail() {
     }
   }
 
+  const handleDeletePost = (postId: number) =>
+    setPosts((posts) => posts.filter((post) => post.id != postId));
+
   if (error) return <p>Error: {error}</p>;
   if (isloading) return <LoadingLogo fullScreen />;
   if (!post) return <p>No Post yet.... Tweet Something</p>;
@@ -157,6 +160,7 @@ export default function PostDetail() {
           post={post}
           onLike={handleLike}
           onBookmark={handleBookmark}
+          onDeleted={handleDeletePost}
         />
 
         {post.comments.map((comment) => (

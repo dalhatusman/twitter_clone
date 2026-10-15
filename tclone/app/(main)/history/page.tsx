@@ -56,6 +56,9 @@ export default function HistoryPage() {
     }
   }
 
+  const handleDeletePost = (postId: number) =>
+    setPosts((posts) => posts.filter((post) => post.id != postId));
+
   if (loading) return <LoadingLogo fullScreen />;
   if (error) return <p className="text-center mt-10 text-gray-500">{error}</p>;
 
@@ -76,6 +79,7 @@ export default function HistoryPage() {
                 post={post}
                 onLike={handleLike}
                 onBookmark={handleBookmark}
+                onDeleted={handleDeletePost}
               />
             ))}
           </div>
